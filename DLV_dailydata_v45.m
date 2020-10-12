@@ -1,4 +1,4 @@
-function OUT = DLV_dailydata_v45(cd,FN_HA,FN_HALI,FN_HADD,cd_H)
+function OUT = DLV_dailydata_v45(cd,FN_HA,FN_HALI,FN_HADD,cd_H,temp_dir)
 % This function produces the 'daily data' from the delaval backups
 % >>> software version v4.5
 %

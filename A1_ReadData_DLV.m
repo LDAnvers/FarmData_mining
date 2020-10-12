@@ -51,9 +51,16 @@ for i = 1:length(FNfiles(:,1))   % run through all the files in the folder
     % Store data in 'files'
     files.Farm{i,1} = FNfiles(i,1:numLoc(1)-1);   % FarmName:length(FN(i,1:numLoc(1)-1))}
     files.Date(i,1) = datetime(FNfiles(i,numLoc(1)+1:numLoc(1)+8),'InputFormat','yyyyMMdd','Format','dd/MM/yyyy'); % Date
-    files.Version(i,1) = str2double(FNfiles(i,numLoc(3)+1:numLoc(4)-1));     % Version
+    files.Version(i,1) = str2double(FNfiles(i,numLoc(4)-3:numLoc(4)-1));     % Version
     files.Table{i,1} = FNfiles(i,numLoc(end)+1:endLoc-1);           % TableName
     files.FN{i,1} = FNfiles(i,1:endLoc-1);      % full FileName    
+    
+    % ORIGINAL VERSION OF R51-56
+%     files.Farm{i,1} = FNfiles(i,1:numLoc(1)-1);   % FarmName:length(FN(i,1:numLoc(1)-1))}
+%     files.Date(i,1) = datetime(FNfiles(i,numLoc(1)+1:numLoc(1)+8),'InputFormat','yyyyMMdd','Format','dd/MM/yyyy'); % Date
+%     files.Version(i,1) = str2double(FNfiles(i,numLoc(4)-3:numLoc(4)-1));     % Version
+%     files.Table{i,1} = FNfiles(i,numLoc(end)+1:endLoc-1);           % TableName
+%     files.FN{i,1} = FNfiles(i,1:endLoc-1);      % full FileName 
 end
 files = sortrows(files, {'Farm','Date'});
 
