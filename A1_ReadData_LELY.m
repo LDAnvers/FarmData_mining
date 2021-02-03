@@ -21,15 +21,15 @@ datetime.setDefaultFormats('defaultdate','dd-MM-yyyy');
 %% STEP 1: Hard code directories
 
 % directory of txt files with data
-cd_txt = 'C:\Users\u0132268\Documents\FarmData_Mining_SQL_Matlab_Files\4.OUTPUT3txt\';       % all data files in txt format
-cd_H = 'C:\Users\u0132268\Documents\FarmData_Mining_SQL_Matlab_Files\4.OUTPUT3head\';        % all header files
+cd_txt = 'C:\Data\FarmData_Mining_SQL_Matlab_Files\4.OUTPUT3txt\';       % all data files in txt format
+cd_H = 'C:\Data\FarmData_Mining_SQL_Matlab_Files\4.OUTPUT3head\';        % all header files
 
 % temporary directory
-temp_dir = 'C:\Users\u0132268\Documents\FarmData_Mining_SQL_Matlab_Files\5.TEMPFILES\';
+temp_dir = 'C:\Data\FarmData_Mining_SQL_Matlab_Files\5.TEMPFILES\';
 
 % directory of output data
-savedir_DAY = 'C:\Users\u0132268\Documents\FarmData_Mining_SQL_Matlab_Files\6.ALLDAY\';
-savedir_MILK = 'C:\Users\u0132268\Documents\FarmData_Mining_SQL_Matlab_Files\6.ALLMILK\';
+savedir_DAY = 'C:\Data\FarmData_Mining_SQL_Matlab_Files\6.ALLDAY\';
+savedir_MILK = 'C:\Data\FarmData_Mining_SQL_Matlab_Files\6.ALLMILK\';
 
 
 %% Store and collect file data

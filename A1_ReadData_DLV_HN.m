@@ -55,7 +55,7 @@ for i = 1:length(FNfiles(:,1))   % run through all the files in the folder
     files.Table{i,1} = FNfiles(i,numLoc(end)+1:endLoc-1);           % TableName
     files.FN{i,1} = FNfiles(i,1:endLoc-1);      % full FileName    
     
-    % ORIGINAL VERSION OF R51-56
+    % ORIGINAL VERSION OF R51-56: change if the name of the file is not correct
 %     files.Farm{i,1} = FNfiles(i,1:numLoc(1)-1);   % FarmName:length(FN(i,1:numLoc(1)-1))}
 %     files.Date(i,1) = datetime(FNfiles(i,numLoc(1)+1:numLoc(1)+8),'InputFormat','yyyyMMdd','Format','dd/MM/yyyy'); % Date
 %     files.Version(i,1) = str2double(FNfiles(i,numLoc(4)-3:numLoc(4)-1));     % Version
@@ -68,102 +68,104 @@ clear i endLoc numLoc
 
 
 %% STEP 1 : load, vertically merge and sort DAILY data of each farm
-% unique farms in the dataset
-Farms = unique(files.Farm);  % all unique farms in the dataset (just the names)
-allVarNames = {'OfficialRegNo','BA','Number','RefID','Name','BDate','Calving','Lac','Date','DIM','TDMY','A7DY','Dur','Milkings','Kickoffs','Incompletes'}; % all varNames of DAY dataset
-
-for i = 1:length(Farms)
-    % find unique dates of the back up files for that farm
-    bakdates = sortrows(unique(files.Date(contains(files.Farm,Farms{i})==1)),'descend');  % all unique back up dates
-        
-    % Show current farm
-    disp(['      Current farm = ' Farms{i}])
-
-    % initialize V
-    V = 0; % never version 0 so last date will always be run
-            
-    % find the filenames
-    for j = 1:length(bakdates) % for all the back ups of that farm - run from last to first back-up file
-        if files.Version(find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)),1,'first')) ~= V  % if it is a different version, run the loop
-            V = files.Version(find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)),1,'first'));  % version
-            D = ['BU' datestr(bakdates(j),'yyyyMMdd') '_V' num2str(V*10)];   % prepare structure - names = dates
-            
-            % show current backup
-            disp(['      Backup date = '  datestr(bakdates(j))])
-
-            if V < 4     % determine version, if 3.7 < 4
-                % FN_BA,FN_ALS,FN_AHD,FN_DM
-                FN_BA = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'BasicAnimal')==1,1,'first')};
-                FN_ALS = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'AnimalLactationSummary')==1,1,'first')};
-                FN_AHD = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'AnimalHistoricalData')==1,1,'first')};
-                FN_DM = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'DailyMilk')==1,1,'first')};
-
-                % define function to use based on version
-                fun = str2func(['DLV_dailydata_v' num2str(V*10)]);     % function to evaluate based on version
-                DAY.(Farms{i}).(D) = fun(cd_txt,FN_BA,FN_ALS,FN_AHD,FN_DM,cd_H,temp_dir);
-            else
-                FN_HA = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'HistoryAnimal')==1,1,'first')};
-                FN_HALI = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'HistoryAnimalLactationInfo')==1,1,'first')};
-                FN_HADD = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'HistoryAnimalDailyData')==1,1,'first')};
-
-                % define function to use based on version
-                fun = str2func(['DLV_dailydata_v' num2str(V*10)]);     % function to evaluate based on version
-                DAY.(Farms{i}).(D) = fun(cd_txt,FN_HA,FN_HALI,FN_HADD,cd_H,temp_dir);
-
-            end
-        end
-    end
-    
-    % find unique rows
-    fields = fieldnames(DAY.(Farms{i}));
-    for j = 1:length(fields)
-        [~,uniRow] = unique(DAY.(Farms{i}).(fields{j})(:,[1 2 6 7 10]),'rows');
-        DAY.(Farms{i}).(fields{j}) = DAY.(Farms{i}).(fields{j})(uniRow,:);
-        
-        % add rows that are missing to the tables (~version)
-        for k = 1:length(allVarNames)
-            if sum(contains(DAY.(Farms{i}).(fields{j}).Properties.VariableNames,allVarNames{k})) == 0
-                if contains(allVarNames{k},'Name')
-                    DAY.(Farms{i}).(fields{j}) = addvars(DAY.(Farms{i}).(fields{j}),repmat({''},height(DAY.(Farms{i}).(fields{j})),1),'NewVariableNames',allVarNames(k),'Before','BDate');
-                else
-                    if contains(allVarNames{k},'RefID')
-                        DAY.(Farms{i}).(fields{j}) = addvars(DAY.(Farms{i}).(fields{j}),NaN*zeros(height(DAY.(Farms{i}).(fields{j})),1),'NewVariableNames',allVarNames(k),'After','Number');
-                    else
-                        DAY.(Farms{i}).(fields{j}) = addvars(DAY.(Farms{i}).(fields{j}),NaN*zeros(height(DAY.(Farms{i}).(fields{j})),1),'NewVariableNames',allVarNames(k));
-                    end
-                end
-            end
-        end
-        
-        % merge 
-        if j == 1
-            DAYm.(Farms{i})= DAY.(Farms{i}).(fields{j});
-        else
-            DAYm.(Farms{i}) = [DAYm.(Farms{i});DAY.(Farms{i}).(fields{j})];
-        end
-        
-        % select unique rows
-        [~,ind] = unique(DAYm.(Farms{i})(:,[1 8 10]),'rows'); % BA Date TDMY
-        DAYm.(Farms{i}) = DAYm.(Farms{i})(ind,:);
-        
-    end 
-end
-clear cd bakdates D fields FN_HA FN_HALI allVarNames FN_HADD fun i j k ind V uniRow
-
-% save statements
-fields = fieldnames(DAYm);
-for i = 1:length(fields)
-    mindate = datestr(min(DAYm.(fields{i}).Date),'yyyymmdd');
-    maxdate = datestr(max(DAYm.(fields{i}).Date),'yyyymmdd');
-
-    writetable(DAYm.(fields{i}),[savedir_DAY 'DAY_' fields{i} '_' mindate '_' maxdate '.txt'],'Delimiter',';');
-    
-end
+% % unique farms in the dataset
+% Farms = unique(files.Farm);  % all unique farms in the dataset (just the names)
+% allVarNames = {'OfficialRegNo','BA','Number','RefID','Name','BDate','Calving','Lac','Date','DIM','TDMY','A7DY','Dur','Milkings','Kickoffs','Incompletes'}; % all varNames of DAY dataset
+% 
+% for i = 1:length(Farms)
+%     % find unique dates of the back up files for that farm
+%     bakdates = sortrows(unique(files.Date(contains(files.Farm,Farms{i})==1)),'descend');  % all unique back up dates
+%         
+%     % Show current farm
+%     disp(['      Current farm = ' Farms{i}])
+% 
+%     % initialize V
+%     V = 0; % never version 0 so last date will always be run
+%             
+%     % find the filenames
+%     for j = 1:length(bakdates) % for all the back ups of that farm - run from last to first back-up file
+%         if files.Version(find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)),1,'first')) ~= V  % if it is a different version, run the loop
+%             V = files.Version(find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)),1,'first'));  % version
+%             D = ['BU' datestr(bakdates(j),'yyyyMMdd') '_V' num2str(V*10)];   % prepare structure - names = dates
+%             
+%             % show current backup
+%             disp(['      Backup date = '  datestr(bakdates(j))])
+% 
+%             if V < 4     % determine version, if 3.7 < 4
+%                 % FN_BA,FN_ALS,FN_AHD,FN_DM
+%                 FN_BA = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'BasicAnimal')==1,1,'first')};
+%                 FN_ALS = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'AnimalLactationSummary')==1,1,'first')};
+%                 FN_AHD = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'AnimalHistoricalData')==1,1,'first')};
+%                 FN_DM = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'DailyMilk')==1,1,'first')};
+% 
+%                 % define function to use based on version
+%                 fun = str2func(['DLV_dailydata_v' num2str(V*10)]);     % function to evaluate based on version
+%                 DAY.(Farms{i}).(D) = fun(cd_txt,FN_BA,FN_ALS,FN_AHD,FN_DM,cd_H,temp_dir);
+%             else
+%                 FN_HA = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'HistoryAnimal')==1,1,'first')};
+%                 FN_HALI = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'HistoryAnimalLactationInfo')==1,1,'first')};
+%                 FN_HADD = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'HistoryAnimalDailyData')==1,1,'first')};
+%                 FN_HN = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'HNDiagnose')==1,1,'first')};
+%                 FN_HN2 = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'HNBiometricData')==1,1,'first')};
+% 
+%                 % define function to use based on version
+%                 fun = str2func(['DLV_HN_dailydata_v' num2str(V*10)]);     % function to evaluate based on version
+%                 DAY.(Farms{i}).(D) = fun(cd_txt,FN_HA,FN_HALI,FN_HADD,FN_HN,FN_HN2,cd_H,temp_dir);
+% 
+%             end
+%         end
+%     end
+%     
+%     % find unique rows
+%     fields = fieldnames(DAY.(Farms{i}));
+%     for j = 1:length(fields)
+%         [~,uniRow] = unique(DAY.(Farms{i}).(fields{j})(:,[1 2 6 7 10]),'rows');
+%         DAY.(Farms{i}).(fields{j}) = DAY.(Farms{i}).(fields{j})(uniRow,:);
+%         
+%         % add rows that are missing to the tables (~version)
+%         for k = 1:length(allVarNames)
+%             if sum(contains(DAY.(Farms{i}).(fields{j}).Properties.VariableNames,allVarNames{k})) == 0
+%                 if contains(allVarNames{k},'Name')
+%                     DAY.(Farms{i}).(fields{j}) = addvars(DAY.(Farms{i}).(fields{j}),repmat({''},height(DAY.(Farms{i}).(fields{j})),1),'NewVariableNames',allVarNames(k),'Before','BDate');
+%                 else
+%                     if contains(allVarNames{k},'RefID')
+%                         DAY.(Farms{i}).(fields{j}) = addvars(DAY.(Farms{i}).(fields{j}),NaN*zeros(height(DAY.(Farms{i}).(fields{j})),1),'NewVariableNames',allVarNames(k),'After','Number');
+%                     else
+%                         DAY.(Farms{i}).(fields{j}) = addvars(DAY.(Farms{i}).(fields{j}),NaN*zeros(height(DAY.(Farms{i}).(fields{j})),1),'NewVariableNames',allVarNames(k));
+%                     end
+%                 end
+%             end
+%         end
+%         
+%         % merge 
+%         if j == 1
+%             DAYm.(Farms{i})= DAY.(Farms{i}).(fields{j});
+%         else
+%             DAYm.(Farms{i}) = [DAYm.(Farms{i});DAY.(Farms{i}).(fields{j})];
+%         end
+%         
+%         % select unique rows
+%         [~,ind] = unique(DAYm.(Farms{i})(:,[1 8 10]),'rows'); % BA Date TDMY
+%         DAYm.(Farms{i}) = DAYm.(Farms{i})(ind,:);
+%         
+%     end 
+% end
+% clear cd bakdates D fields FN_HA FN_HALI allVarNames FN_HADD fun i j k ind V uniRow
+% 
+% % save statements
+% fields = fieldnames(DAYm);
+% for i = 1:length(fields)
+%     mindate = datestr(min(DAYm.(fields{i}).Date),'yyyymmdd');
+%     maxdate = datestr(max(DAYm.(fields{i}).Date),'yyyymmdd');
+% 
+%     writetable(DAYm.(fields{i}),[savedir_DAY 'DAY_' fields{i} '_' mindate '_' maxdate '.txt'],'Delimiter',';');
+%     
+% end
 
 %% STEP 2 : load, vertically merge and sort PER MILKING data of each farm
 % unique farms in the dataset
 Farms = unique(files.Farm);  % all unique farms in the dataset
-% allVarNames = {'OfficialRegNo','BA','Number','RefID','Name','BDate','Calving','Lac','Date','DIM','TDMY','A7DY','Dur','Milkings','Kickoffs','Incompletes'}; % all varNames
+allVarNames = {'OfficialRegNo','BA','Number','RefID','Name','BDate','Calving','Lac','Date','DIM','TDMY','A7DY','Dur','Milkings','Kickoffs','Incompletes'}; % all varNames of DAY dataset
 
 for i = 1:length(Farms)
     % find unique dates of the back up files for that farm
@@ -197,6 +199,8 @@ for i = 1:length(Farms)
             FN_ALS = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'AnimalLactationSummary')==1,1,'first')};
             FN_SMY = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'SessionMilkYield')==1,1,'first')};
             FN_VMY = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'VoluntarySessionMilkYield')==1,1,'first')};
+            FN_HN = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'HNDiagnose')==1,1,'first')};
+            FN_HN2 = files.FN{find(contains(files.Farm,Farms{i})== 1 & datenum(files.Date) == datenum(bakdates(j)) & contains(files.Table,'HNBiometricData')==1,1,'first')};
             
             % define function to use based on version
             fun = str2func(['DLV_milkdata_v' num2str(V*10)]);     % function to evaluate based on version
