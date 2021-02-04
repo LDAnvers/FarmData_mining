@@ -20,11 +20,11 @@ IF DB_ID ('DDMVMS') IS NOT NULL
 		DROP DATABASE DDMVMS
 
 ---- Directories:
-DECLARE @DirInputData NVARCHAR(MAX) = 'C:\Users\Lore\Documents\FarmData_Mining_SQL_Matlab_Files\1.INPUTDATA\Delaval\A1_3.7_V\'
-DECLARE @DirOutput1 NVARCHAR(MAX) = 'C:\Users\Lore\Documents\FarmData_Mining_SQL_Matlab_Files\2.OUTPUT1\'
-DECLARE @DirOutput2 NVARCHAR(MAX) = 'C:\Users\Lore\Documents\FarmData_Mining_SQL_Matlab_Files\3.OUTPUT2\'
-DECLARE @DirOutput3txt NVARCHAR(MAX) = 'C:\Users\Lore\Documents\FarmData_Mining_SQL_Matlab_Files\4.OUTPUT3txt\'
-DECLARE @DirOutput3head NVARCHAR(MAX) = 'C:\Users\Lore\Documents\FarmData_Mining_SQL_Matlab_Files\4.OUTPUT3head\'
+DECLARE @DirInputData NVARCHAR(MAX) = 'C:\Data\FarmData_Mining_SQL_Matlab_Files\1.INPUTDATA\Delaval\A1_3.7_V\'
+DECLARE @DirOutput1 NVARCHAR(MAX) = 'C:\Data\FarmData_Mining_SQL_Matlab_Files\2.OUTPUT1\'
+DECLARE @DirOutput2 NVARCHAR(MAX) = 'C:\Data\FarmData_Mining_SQL_Matlab_Files\3.OUTPUT2\'
+DECLARE @DirOutput3txt NVARCHAR(MAX) = 'C:\Data\FarmData_Mining_SQL_Matlab_Files\4.OUTPUT3txt\'
+DECLARE @DirOutput3head NVARCHAR(MAX) = 'C:\Data\FarmData_Mining_SQL_Matlab_Files\4.OUTPUT3head\'
 DECLARE @DirZipExe NVARCHAR(MAX) = 'C:\"Program Files"\7-Zip\7z.exe'
 
 
